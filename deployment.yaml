@@ -1,0 +1,66 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-config-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-config-app
+  template:
+    metadata:
+      labels:
+        app: test-config-app
+    spec:
+      initContainers:
+      - name: copy-startup-script
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            cp /etc/config/startup.script /work/startup.sh
+            chmod +x /work/startup.sh
+        volumeMounts:
+        - name: test-config-volume
+          mountPath: /etc/config
+          readOnly: true
+        - name: workdir
+          mountPath: /work
+      containers:
+      - name: busybox
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "VERSION=$VERSION"
+            echo "MAIN_APP_NAME=$MAIN_APP_NAME"
+            echo ""
+            echo "Execute script:"
+            /work/startup.sh
+            sleep 3600
+        securityContext:
+          readOnlyRootFilesystem: true
+        env:
+        - name: VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: test-config
+              key: version
+        - name: MAIN_APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: test-config
+              key: main_app_name
+        volumeMounts:
+        - name: test-config-volume
+          mountPath: /etc/config
+          readOnly: true
+        - name: workdir
+          mountPath: /work
+      volumes:
+      - name: test-config-volume
+        configMap:
+          name: test-config
+      - name: workdir
+        emptyDir: {}

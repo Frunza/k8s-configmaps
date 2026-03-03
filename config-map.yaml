@@ -1,0 +1,16 @@
+# config-map.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+data:
+  # property-like keys; each key maps to a simple value
+  version: "3.1.4"
+  main_app_name: "myapp"
+
+  # file-like keys
+  startup.script: |
+    #!/bin/sh
+
+    echo abc
+    echo 111

@@ -427,7 +427,12 @@ Execute script:
 abc
 111
 ```
-, so the script successfully runs. Note that we used an init container, where the */work* directory was created automatically by the volume mount, and where we copied the script to the desired location and gave it execution rights. In the main container we can now just run the script after we mount the same volume, so that it is synced between the init container and the main container. 
+, so the script successfully runs. Note that we used an init container, where the */work* directory was created automatically by the volume mount, and where we copied the script to the desired location and gave it execution rights. In the main container we can now just run the script after we mount the same volume, so that it is synced between the init container and the main container.
+
+`ConfigMaps` update works a bit different, depending on usage:
+- Volume mounts: If you update a `ConfigMap`, the mounted files in running pods are automatically updated (though it may take up to ~60 seconds due to the kubelet's periodic sync cache).
+- Environment variables: These are not updated right away. If you update a `ConfigMap`, any running pods will continue using the old value until the pod is restarted.
+This is an important distinction when deciding between volume mounts and environment variables for your use case.
 
 ## Cleanup
 
